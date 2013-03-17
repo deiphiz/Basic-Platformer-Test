@@ -23,7 +23,7 @@ FLAGS = HWSURFACE|DOUBLEBUF
 
 def main():
     
-    # Set in-game variables
+    # Set up screen
     screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), FLAGS)
     pygame.display.set_caption('2D Platforming Test 3')
     clock = pygame.time.Clock()
