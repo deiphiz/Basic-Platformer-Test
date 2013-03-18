@@ -85,7 +85,7 @@ def checkOnBlock(rect):
             if level[y][x] == BLANK:
                 continue
             elif level[y][x] == BLOCK:
-                tempCheckRect = copy.deepcopy(rect)
+                tempCheckRect = copy.copy(rect)
                 tempLevelRect = pygame.Rect(x*BLOCKWIDTH, y*BLOCKHEIGHT, BLOCKWIDTH, BLOCKHEIGHT)
                 tempCheckRect.bottom += 1
                 if tempLevelRect.colliderect(tempCheckRect):

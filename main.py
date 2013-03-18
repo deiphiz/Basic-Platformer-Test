@@ -16,7 +16,7 @@ from pygame.locals import *
 pygame.init()
 
 # Screen Constants
-FPS = 30
+FPS = 0
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
 FLAGS = HWSURFACE|DOUBLEBUF
@@ -61,8 +61,6 @@ def main():
                     jumping = False
                 if event.key == K_x:
                     showText = not showText
-                if event.key == K_c:
-                    level = open("level.lvl").readlines()
 
         Xkeys = pygame.key.get_pressed()
         accelX = movement.getAccel(Xkeys, jumping)

@@ -6,7 +6,7 @@ import pygame
 BLANK = '.'
 BLOCK = '0'
 level = [row.strip('\n') for row in\
-         open("level.lvl", 'r').readlines()]
+         open("lib\\level.lvl", 'r').readlines()]
 
 # Syntatic sugars-------------
 NORTH = 'north'
