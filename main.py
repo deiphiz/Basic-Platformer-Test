@@ -111,7 +111,8 @@ def main():
             'deltaX: %r deltaY: %r' %(playerSpeedX, playerSpeedY),
             #'minX: %r minY: %r' %(minXDistance, minYDistance),
             'CameraX: %r CameraY: %r' %(cameraRect.left, cameraRect.top),
-            'Level Coordinates: %r, %r' %(collision.convertPixelToLevel(player.left, player.top))]
+            'Level Coordinates: %r, %r' %(collision.convertPixelToLevel(player.left, player.top)),
+            'FPS: %r' %(clock.get_fps())]
             
             draw.drawOSD(screen, OSDText)
 
