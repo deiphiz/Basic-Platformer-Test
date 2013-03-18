@@ -16,7 +16,7 @@ from pygame.locals import *
 pygame.init()
 
 # Screen Constants
-FPS = 0
+FPS = 30
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
 FLAGS = HWSURFACE|DOUBLEBUF
