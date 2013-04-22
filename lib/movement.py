@@ -6,8 +6,8 @@ from pygame.locals import *
 
 ACCEL = 3
 AIRACCEL = 2
-DEACCEL = 5
-MAXSPEED = 20
+DEACCEL = 10
+MAXSPEED = 18
 
 def getAccel(keys, jumping):
     if not jumping:
@@ -39,11 +39,16 @@ def checkCollision(speed, minDistance):
 
 def accelerate(accel, speed):
     if accel != 0:
-        speed += accel
-        if speed > MAXSPEED:
-            speed = MAXSPEED
-        if speed < -MAXSPEED:
-            speed = -MAXSPEED
+        if ((speed < 0) and (accel > 0)) or\
+           ((speed > 0) and (accel < 0)):
+            speed = accel
+        else:
+            speed += accel
+    
+    if speed > MAXSPEED:
+        speed = MAXSPEED
+    if speed < -MAXSPEED:
+        speed = -MAXSPEED
 
     if accel == 0:
         if speed > 0:

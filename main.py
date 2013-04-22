@@ -2,9 +2,6 @@
     My test for 2D platformer movement.
     Here we have collision detection, smooth accelerated movement,
     seperate world and window coordinates, and camera movement.
-    
-    I've completely refactored this code in this version, and split
-    up many things into different modules.
 """
 
 import pygame
@@ -29,7 +26,7 @@ def main():
     clock = pygame.time.Clock()
     
     # Set up entities
-    player = pygame.Rect(10*BLOCKWIDTH, 
+    player = pygame.Rect(10*BLOCKHEIGHT, 
                          12*BLOCKHEIGHT - 300, 
                          PLAYERSIZE, PLAYERSIZE)
     cameraRect = pygame.Rect(player.centerx-(WINDOWWIDTH/2), 
@@ -56,11 +53,14 @@ def main():
             if event.type == KEYDOWN:
                 if event.key == K_SPACE and not jumping:
                     jumping = True
+                    lastJump = time.time()
             if event.type == KEYUP:
                 if event.key == K_SPACE:
                     jumping = False
                 if event.key == K_x:
                     showText = not showText
+                if event.key == K_r:
+                    return
 
         Xkeys = pygame.key.get_pressed()
         accelX = movement.getAccel(Xkeys, jumping)
@@ -70,7 +70,10 @@ def main():
         # playerSpeedX is calculated seperately just in case we 
         # want movement without acceleration in the future
         playerSpeedX = movement.accelerate(accelX, playerSpeedX)
-        minXDistance = movement.getSmallestDistance(player, playerSpeedX, AXISX)
+        try:
+            minXDistance = movement.getSmallestDistance(player, playerSpeedX, AXISX)
+        except (TypeError, IndexError, ValueError):
+            minXDistance = playerSpeedX
         player.left += minXDistance
         if abs(minXDistance) < abs(playerSpeedX):
             playerSpeedX = 0
@@ -78,14 +81,17 @@ def main():
     #///////////////////////Y-axis movement///////////////////////#
         
         onBlock = collision.checkOnBlock(player)
-        if jumping:
+        if jumping and time.time()-lastJump <= 3:
             playerSpeedY = jump.jump(playerSpeedY, onBlock)
             if onBlock:
                 onBlock = False
         else:
             playerSpeedY = jump.fall(playerSpeedY)
-        
-        minYDistance = movement.getSmallestDistance(player, playerSpeedY, AXISY)
+            
+        try:
+            minYDistance = movement.getSmallestDistance(player, playerSpeedY, AXISY)
+        except (TypeError, IndexError, ValueError):
+            minYDistance = playerSpeedY
         player.top += minYDistance
         if abs(minYDistance) < abs(playerSpeedY):
             playerSpeedY = 0
@@ -103,14 +109,17 @@ def main():
 
         if showText:
             # Customise the OSD here. This was the information I found the most useful.
-            OSDText = [\
-            'BoxL: %r BoxR: %r BoxU: %r BoxD: %r' %(player.left, player.right, player.top, player.bottom),
-            'Jumping: %r OnBlock: %r' %(jumping, onBlock),
-            'deltaX: %r deltaY: %r' %(playerSpeedX, playerSpeedY),
-            #'minX: %r minY: %r' %(minXDistance, minYDistance),
-            'CameraX: %r CameraY: %r' %(cameraRect.left, cameraRect.top),
-            'Level Coordinates: %r, %r' %(collision.convertPixelToLevel(player.left, player.top)),
-            'FPS: %r' %(clock.get_fps())]
+            try:
+                OSDText = [\
+                'BoxL: %r BoxR: %r BoxU: %r BoxD: %r' %(player.left, player.right, player.top, player.bottom),
+                'Jumping: %r OnBlock: %r' %(jumping, onBlock),
+                'deltaX: %r deltaY: %r' %(playerSpeedX, playerSpeedY),
+                #'minX: %r minY: %r' %(minXDistance, minYDistance),
+                'CameraX: %r CameraY: %r' %(cameraRect.left, cameraRect.top),
+                'Level Coordinates (Top-Left): %r, %r' %(collision.convertPixelToLevel(player.left, player.top)),
+                'FPS: %r' %(clock.get_fps())]
+            except TypeError:
+                OSDText = ['ERROR']
             
             draw.drawOSD(screen, OSDText)
 
@@ -118,4 +127,4 @@ def main():
         clock.tick(FPS)
 
 if __name__ == '__main__':
-    main()
+    while True: main()

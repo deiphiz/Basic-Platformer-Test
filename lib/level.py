@@ -1,6 +1,5 @@
 # Simple collision layer parser
 # Also keeps some level related constants
-import pygame
 
 # Parse level-----------------
 BLANK = '.'

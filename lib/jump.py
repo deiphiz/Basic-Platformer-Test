@@ -1,9 +1,9 @@
 # Module for calculating jumps
 
-FALLACCEL = 5
-JUMPMOD = 3 # How much we subtract from the fall acceleration while jumping (helps to control the jump height)
-JUMPACCEL = 31
-MAXFALLSPEED = 40
+FALLACCEL = 4
+JUMPMOD = 2.5 # How much we subtract from the fall acceleration while jumping (helps to control the jump height)
+JUMPACCEL = 25
+MAXFALLSPEED = 30
 
 def jump(speed, onBlock):
     if onBlock:
