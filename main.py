@@ -5,126 +5,67 @@
 """
 
 import pygame
-import sys
-import time
-from lib import collision, movement, draw, camera, jump
-from lib.level import *
 from pygame.locals import *
 pygame.init()
 
-# Screen Constants
-FPS = 30
-WINDOWWIDTH = 800
-WINDOWHEIGHT = 600
-FLAGS = HWSURFACE|DOUBLEBUF
+import sys
+import time
 
-def main():
-    
-    # Set up screen
-    screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), FLAGS)
-    pygame.display.set_caption('2D Platforming Test 3')
-    clock = pygame.time.Clock()
-    
-    # Set up entities
-    player = pygame.Rect(10*BLOCKHEIGHT, 
-                         12*BLOCKHEIGHT - 300, 
-                         PLAYERSIZE, PLAYERSIZE)
-    cameraRect = pygame.Rect(player.centerx-(WINDOWWIDTH/2), 
-                      player.centery-(WINDOWHEIGHT/2), 
-                      WINDOWWIDTH, WINDOWHEIGHT)
-    
-    # Set up in-game variables
-    accelX = 0
-    playerSpeedX = 0
-    playerSpeedY = 0
-    jumping = False
-    onBlock = False
+from lib import (entities, 
+                camera, 
+                draw, 
+                level,
+                hud)
+
+class main():
+    # Screen Constants
+    FPS = 30
+    WINDOWWIDTH = 800
+    WINDOWHEIGHT = 600
+    FLAGS = HWSURFACE|DOUBLEBUF
     showText = True
+    
+    def play_game(self):
+        # Set up screen
+        self.screen = pygame.display.set_mode((self.WINDOWWIDTH, self.WINDOWHEIGHT), self.FLAGS)
+        pygame.display.set_caption('2D Platforming Test 3')
+        self.clock = pygame.time.Clock()
+        
+        # Set up objects
+        self.currentLevel = level.Level("lib\\level_1.lvl")
+        self.player = entities.Player(self.currentLevel, (10, 8, 50, 50), None)
+        self.cameraObj = camera.Camera(self.player.rect, 
+                                       self.WINDOWWIDTH, 
+                                       self.WINDOWHEIGHT)
+        self.OSD_text = hud.OSD()
 
-    # Start game loop
-    while True:
+        # Game loop
+        while True:
+            self.keys = self.collect_input()
+            self.player.update(self.keys, self.currentLevel)
+            self.cameraObj.update(self.player.rect, self.currentLevel)
+            self.OSD_text.update(self)
+           
+            draw.draw_level(self.screen, self.currentLevel, self.cameraObj)
+            draw.draw_entities(self.screen, (self.player,), self.cameraObj)
+            if self.showText:
+                draw.draw_OSD(self.screen, self.OSD_text.text)
 
-    #///////////////////////Event handling///////////////////////#
+            pygame.display.update()
+            self.clock.tick(self.FPS)
+            
+    def collect_input(self):
         for event in pygame.event.get():
             if event.type == QUIT or\
             (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN:
-                if event.key == K_SPACE and not jumping:
-                    jumping = True
-                    lastJump = time.time()
             if event.type == KEYUP:
-                if event.key == K_SPACE:
-                    jumping = False
                 if event.key == K_x:
-                    showText = not showText
-                if event.key == K_r:
-                    return
+                    self.showText = not self.showText
 
-        Xkeys = pygame.key.get_pressed()
-        accelX = movement.getAccel(Xkeys, jumping)
-
-    #///////////////////////X-axis movement///////////////////////#
-
-        # playerSpeedX is calculated seperately just in case we 
-        # want movement without acceleration in the future
-        playerSpeedX = movement.accelerate(accelX, playerSpeedX)
-        try:
-            minXDistance = movement.getSmallestDistance(player, playerSpeedX, AXISX)
-        except (TypeError, IndexError, ValueError):
-            minXDistance = playerSpeedX
-        player.left += minXDistance
-        if abs(minXDistance) < abs(playerSpeedX):
-            playerSpeedX = 0
-        
-    #///////////////////////Y-axis movement///////////////////////#
-        
-        onBlock = collision.checkOnBlock(player)
-        if jumping and time.time()-lastJump <= 3:
-            playerSpeedY = jump.jump(playerSpeedY, onBlock)
-            if onBlock:
-                onBlock = False
-        else:
-            playerSpeedY = jump.fall(playerSpeedY)
-            
-        try:
-            minYDistance = movement.getSmallestDistance(player, playerSpeedY, AXISY)
-        except (TypeError, IndexError, ValueError):
-            minYDistance = playerSpeedY
-        player.top += minYDistance
-        if abs(minYDistance) < abs(playerSpeedY):
-            playerSpeedY = 0
-
-    #///////////////////////Camera Movement///////////////////////#
-        
-        cameraRect = camera.moveCamera(player, cameraRect)
-        # Uncomment below to have the camera always locked to the player
-        # cameraRect.topleft = (player.centerx-(WINDOWWIDTH/2), player.centery-(WINDOWHEIGHT/2))
-            
-    #///////////////////////Rendering///////////////////////#
-        
-        draw.drawLevel(screen, cameraRect)
-        draw.drawRect(screen, player, cameraRect)
-
-        if showText:
-            # Customise the OSD here. This was the information I found the most useful.
-            try:
-                OSDText = [\
-                'BoxL: %r BoxR: %r BoxU: %r BoxD: %r' %(player.left, player.right, player.top, player.bottom),
-                'Jumping: %r OnBlock: %r' %(jumping, onBlock),
-                'deltaX: %r deltaY: %r' %(playerSpeedX, playerSpeedY),
-                #'minX: %r minY: %r' %(minXDistance, minYDistance),
-                'CameraX: %r CameraY: %r' %(cameraRect.left, cameraRect.top),
-                'Level Coordinates (Top-Left): %r, %r' %(collision.convertPixelToLevel(player.left, player.top)),
-                'FPS: %r' %(clock.get_fps())]
-            except TypeError:
-                OSDText = ['ERROR']
-            
-            draw.drawOSD(screen, OSDText)
-
-        pygame.display.update()
-        clock.tick(FPS)
+        keys = pygame.key.get_pressed()
+        return keys
 
 if __name__ == '__main__':
-    while True: main()
+    main().play_game()

@@ -28,33 +28,32 @@ def drawText(text, font, color, surface, x, y):
     textrect.topleft = (x, y)
     surface.blit(textobj, textrect)
 
-def drawOSD(surface, strings):
+def draw_OSD(surface, strings):
     pos = 0
     for text in strings:
         drawText(text, MAINFONT, OSD_COLOR, surface, 10, pos)
         pos += FONTSIZE
 
-def drawLevel(surface, camera):
+def draw_level(surface, level, camera):
     surface.fill(BACKGROUND_COLOR)
 
     # Rendering involves a little conversion of level coordinates to surface coordinates
     # The active area makes sure only blocks that are shown on screen are rendered
-    for y in range(LEVELHEIGHT):
-        for x in range(LEVELWIDTH):
-            blockRect = pygame.Rect(x*BLOCKWIDTH, y*BLOCKHEIGHT, BLOCKWIDTH, BLOCKHEIGHT)
+    for y in range(level.levelHeight):
+        for x in range(level.levelWidth):
+            blockRect = pygame.Rect(x*level.blockWidth, y*level.blockHeight, level.blockWidth, level.blockWidth)
             if camera.colliderect(blockRect):
-                if level[y][x] == BLANK:
+                if level.collisionLayer[y][x] == level.blank:
                     continue
-                if level[y][x] == BLOCK:
+                if level.collisionLayer[y][x] == level.block:
                     pygame.draw.rect(surface, BLOCK_COLOR, 
-                    ((x*BLOCKWIDTH) - camera.left, 
-                     (y*BLOCKHEIGHT) - camera.top, 
-                     BLOCKWIDTH, 
-                     BLOCKHEIGHT))
+                    ((x*level.blockWidth) - camera.left, 
+                     (y*level.blockHeight) - camera.top, 
+                     level.blockWidth, 
+                     level.blockHeight))
  
 # This function is needed to draw a rect within the camera 
-def drawRect(surface, rect, camera):
-    pygame.draw.rect(surface, PLAYER_COLOR, (rect.left - camera.left, 
-                                    rect.top - camera.top, 
-                                    rect.width, 
-                                    rect.height))
+def draw_entities(surface, sprites, camera):
+    for sprite in sprites:
+        surface.blit(sprite.image, (sprite.rect.left - camera.left, 
+                                    sprite.rect.top - camera.top))

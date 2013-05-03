@@ -1,25 +1,16 @@
-# Simple collision layer parser
-# Also keeps some level related constants
-
-# Parse level-----------------
-BLANK = '.'
-BLOCK = '0'
-level = [row.strip('\n') for row in\
-         open("lib\\level.lvl", 'r').readlines()]
-
-# Syntatic sugars-------------
-NORTH = 'north'
-SOUTH = 'south'
-EAST = 'east'
-WEST = 'west'
-AXISX = 'x'
-AXISY = 'y'
+class Level(object):
+    blank = '.'
+    block = '0'
+    blockWidth = 75
+    blockHeight = 75
+    
+    def __init__(self, file):
+        self.collisionLayer = [row.strip('\n') for row in\
+                          open(file, 'r').readlines()]
+        self.levelWidth = len(self.collisionLayer[0])
+        self.levelHeight = len(self.collisionLayer)
         
-# Set level constants-----------       
-LEVELWIDTH = len(level[0])
-LEVELHEIGHT = len(level)
-BLOCKWIDTH = 75
-BLOCKHEIGHT = 75
-
-# Player-----------------------
-PLAYERSIZE = 50
+        self.leftEdge = 0
+        self.topEdge = 0
+        self.rightEdge = self.levelWidth * self.blockWidth
+        self.bottomEdge = self.levelHeight * self.blockHeight

@@ -3,25 +3,34 @@ from level import *
 
 CAMERASLACK = 60 # How much the target rect can move before the camera moves with it
 
-def moveCamera(rect, camera):
-    # Figure out if rect has exceeded camera slack
-    if camera.centerx - rect.centerx > CAMERASLACK:
-        camera.left = rect.centerx + CAMERASLACK - camera.width/2
-    elif rect.centerx - camera.centerx > CAMERASLACK:
-        camera.left = rect.centerx - CAMERASLACK - camera.width/2
-    if camera.centery - rect.centery > CAMERASLACK:
-        camera.top = rect.centery + CAMERASLACK - camera.height/2
-    elif rect.centery - camera.centery > CAMERASLACK:
-        camera.top = rect.centery - CAMERASLACK - camera.height/2
-    
-    # This keeps the camera within the boundaries of the level
-    if camera.right > LEVELWIDTH*BLOCKWIDTH:
-        camera.right = LEVELWIDTH*BLOCKWIDTH
-    elif camera.left < 0:
-        camera.left = 0
-    if camera.top < 0:
-        camera.top = 0
-    elif camera.bottom > LEVELHEIGHT*BLOCKHEIGHT:
-        camera.bottom = LEVELHEIGHT*BLOCKHEIGHT
-    
-    return camera
+class Camera(pygame.Rect):
+    cameraSlack = 60
+    def __init__(self, targetRect, windowWidth, windowHeight):
+        super(Camera,self).__init__(targetRect.centerx-(windowWidth/2), 
+                                    targetRect.centery-(windowHeight/2), 
+                                    windowWidth, windowHeight)
+        
+    def update(self, rect, level):
+        self.centerx = rect.centerx
+        self.centery = rect.centery
+        # Figure out if rect has exceeded camera slack
+        if self.centerx - rect.centerx > CAMERASLACK:
+            self.left = rect.centerx + CAMERASLACK - self.width/2
+        elif rect.centerx - self.centerx > CAMERASLACK:
+            self.left = rect.centerx - CAMERASLACK - self.width/2
+        if self.centery - rect.centery > CAMERASLACK:
+            self.top = rect.centery + CAMERASLACK - self.height/2
+        elif rect.centery - self.centery > CAMERASLACK:
+            self.top = rect.centery - CAMERASLACK - self.height/2
+        
+        # This keeps the camera within the boundaries of the level
+        if self.right > level.rightEdge:
+            self.right = level.rightEdge
+        elif self.left < 0:
+            self.left = 0
+        if self.top < 0:
+            self.top = 0
+        elif self.bottom > level.bottomEdge:
+            self.bottom = level.bottomEdge
+        
+        return self
