@@ -33,7 +33,7 @@ class main():
         
         # Set up objects
         self.currentLevel = level.Level("lib\\level_1.lvl")
-        self.player = entities.Player(self.currentLevel, (10, 8, 50, 50), None)
+        self.player = entities.Player(self.currentLevel, (10, 8, 60, 90), "lib\\player.png")
         self.cameraObj = camera.Camera(self.player.rect, 
                                        self.WINDOWWIDTH, 
                                        self.WINDOWHEIGHT)
@@ -43,7 +43,7 @@ class main():
         while True:
             self.keys = self.collect_input()
             self.player.update(self.keys, self.currentLevel)
-            self.cameraObj.update(self.player.rect, self.currentLevel)
+            self.cameraObj.update(self.player.cameraRect, self.currentLevel)
             self.OSD_text.update(self)
            
             draw.draw_level(self.screen, self.currentLevel, self.cameraObj)

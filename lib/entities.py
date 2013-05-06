@@ -1,9 +1,12 @@
 import pygame
+from pygame.locals import *
 import copy
+import time
 
-Kleft = pygame.locals.K_LEFT
-Kright = pygame.locals.K_RIGHT
-Kjump = pygame.locals.K_SPACE
+Kleft = K_LEFT
+Kright = K_RIGHT
+Kjump = K_SPACE
+Kcrouch = K_z
 
 NORTH = 'north'
 SOUTH = 'south'
@@ -27,14 +30,21 @@ class Entity(object):
     def __init__(self, level, rectTuple, spriteSheet=None):
         self.rect = pygame.Rect((rectTuple[0] * level.blockWidth) - level.blockWidth,
                                 (rectTuple[1] * level.blockHeight) - level.blockHeight,
-                                rectTuple[2], rectTuple[3])
-        if spriteSheet != None:
-            self.frames = load_frames(spriteSheet)
-            self.image = self.frames[0]
-        else:
+                                 rectTuple[2], rectTuple[3])
+        self.normalHeight = self.rect.height
+
+        self.cameraRect = copy.copy(self.rect)
+        
+        try:
+            self.frames = self.load_frames(spriteSheet)
+            self.currentFrame = 0
+            self.image = self.frames[self.currentFrame]
+            self.hasSprite = True
+            self.lastFrame = time.time()
+        except pygame.error:
             self.image = pygame.Surface((self.rect.width, self.rect.height))
             self.image.fill(self.color)
-        
+            self.hasSprite = False
         
         self.accelX = 0
         self.speedX = 0
@@ -45,8 +55,30 @@ class Entity(object):
     def update(self):
         pass
         
-    def load_frames(self, spriteSheet):
-        pass
+    def load_frames(self, filename):
+    
+        # Set up spritesheet
+        spritesheet = pygame.image.load(filename)
+        spritesheetWidth, spritesheetHeight = spritesheet.get_size()
+        
+        # Make individual tiles
+        frames = []
+        for frame in range(spritesheetWidth/self.rect.width):
+            newFrameRect = pygame.Rect(frame*self.rect.width, 
+                                       0, 
+                                       self.rect.width, 
+                                       spritesheetHeight)
+            frames.append(spritesheet.subsurface(newFrameRect))
+        
+        return frames
+        
+    def updateAnim(self):
+        if time.time() - self.lastFrame >= 0.2:
+            self.lastFrame = time.time()
+            self.currentFrame += 1
+            if self.currentFrame > len(self.frames)-1:
+                self.currentFrame = 0
+        self.image = self.frames[self.currentFrame]
         
     def get_accel(self, keys, jumping):
         if not jumping:
@@ -245,8 +277,25 @@ class Entity(object):
     def get_coords(self, level):
         return self.convert_pixel_to_level(self.rect.centerx, self.rect.centery, level)
         
-class Player(Entity):          
+class Player(Entity):
+    crouching = False
+    crouchHeight = 70
+    
     def update(self, keys, level):
+        # Crouch the player if needed
+        if keys[Kcrouch] and not self.crouching:
+            self.crouching = True
+            self.rect.height = self.crouchHeight
+            self.rect.bottom += self.normalHeight - self.crouchHeight
+        elif not keys[Kcrouch] and self.crouching:
+            self.crouching = False
+            self.rect.height = self.normalHeight
+            self.rect.bottom -= self.normalHeight - self.crouchHeight
+        
+        # Update the player's image to the new rect size
+        self.image = pygame.Surface((self.rect.width, self.rect.height))
+        self.image.fill(self.color)
+        
         # Calculate movement on X-axis
         self.accelX = self.get_accel(keys, self.jumping)
         self.speedX = self.accelerate(self.accelX, self.speedX)
@@ -281,3 +330,7 @@ class Player(Entity):
         # Update player position
         self.rect.left += self.minXDistance  
         self.rect.top  += self.minYDistance
+        self.cameraRect.move_ip(self.minXDistance, self.minYDistance)
+        
+        if self.hasSprite:
+            self.updateAnim()

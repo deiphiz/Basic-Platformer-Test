@@ -1,3 +1,5 @@
+import time
+
 class OSD():
     def __init__(self):
         self.text = ['']
@@ -18,6 +20,7 @@ class OSD():
             'MinX: %r MinY: %r' %(game.player.minXDistance,
                                   game.player.minYDistance),
             'Level Coordinates: %r, %r' %(game.player.get_coords(game.currentLevel)),
-            'FPS: %r' %(game.clock.get_fps())]
+            'FPS: %r' %(game.clock.get_fps()),
+            '%r' %(time.time()-game.player.lastFrame)]
         except TypeError:
             self.text = ['ERROR']
