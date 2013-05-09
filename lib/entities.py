@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import copy
 import time
+import anim
 
 Kleft = K_LEFT
 Kright = K_RIGHT
@@ -27,7 +28,7 @@ class Entity(object):
     jumpAccel = 25
     maxFallSpeed = 30
     
-    def __init__(self, level, rectTuple, spriteSheet=None):
+    def __init__(self, level, rectTuple, image=None):
         self.rect = pygame.Rect((rectTuple[0] * level.blockWidth) - level.blockWidth,
                                 (rectTuple[1] * level.blockHeight) - level.blockHeight,
                                  rectTuple[2], rectTuple[3])
@@ -36,11 +37,7 @@ class Entity(object):
         self.cameraRect = copy.copy(self.rect)
         
         try:
-            self.frames = self.load_frames(spriteSheet)
-            self.currentFrame = 0
-            self.image = self.frames[self.currentFrame]
-            self.hasSprite = True
-            self.lastFrame = time.time()
+            self.image = image
         except pygame.error:
             self.image = pygame.Surface((self.rect.width, self.rect.height))
             self.image.fill(self.color)
@@ -280,6 +277,9 @@ class Entity(object):
 class Player(Entity):
     crouching = False
     crouchHeight = 70
+    def __init__(self, level, rectTuple, image=None):
+        super(Player, self).__init__(level, rectTuple, image)
+        self.running = anim.Animation("lib\\player.png", self.rect.width, 0.2)
     
     def update(self, keys, level):
         # Crouch the player if needed
@@ -332,5 +332,17 @@ class Player(Entity):
         self.rect.top  += self.minYDistance
         self.cameraRect.move_ip(self.minXDistance, self.minYDistance)
         
-        if self.hasSprite:
-            self.updateAnim()
+        # Update frames of player
+        if self.speedX > 0:
+            if self.running.reversed:
+                self.running.reverse()
+            self.running.update()
+            self.image = self.running.image
+        elif self.speedX < 0:
+            if not self.running.reversed:
+                self.running.reverse()
+            self.running.update()
+            self.image = self.running.image
+        elif self.speedX == 0:
+            self.image = self.running.frames[1]
+            self.running.reset()

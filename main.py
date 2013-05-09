@@ -16,7 +16,7 @@ from lib import (entities,
                 draw, 
                 level,
                 hud)
-
+ 
 class main():
     # Screen Constants
     FPS = 30
@@ -43,7 +43,7 @@ class main():
         while True:
             self.keys = self.collect_input()
             self.player.update(self.keys, self.currentLevel)
-            self.cameraObj.update(self.player.cameraRect, self.currentLevel)
+            self.cameraObj.update(self.player.rect, self.currentLevel)
             self.OSD_text.update(self)
            
             draw.draw_level(self.screen, self.currentLevel, self.cameraObj)
