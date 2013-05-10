@@ -2,11 +2,14 @@ import pygame
 import time
 
 class Animation(object):
-    def __init__(self, filename, spriteWidth, frameDuration):
+    def __init__(self, image, spriteWidth, frameDuration):
         self.frameDuration = frameDuration
         
         # Set up spritesheet
-        spritesheet = pygame.image.load(filename)
+        if type(image) is str:
+            spritesheet = pygame.image.load(image)
+        elif type(image) is pygame.Surface:
+            spritesheet = image
         spritesheetWidth, spritesheetHeight = spritesheet.get_size()
         
         # Make individual tiles

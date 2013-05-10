@@ -9,8 +9,8 @@ class Camera(pygame.Rect):
                                     windowWidth, windowHeight)
         
     def update(self, rect, level):
-        self.centerx = rect.centerx
-        self.centery = rect.centery
+        #self.centerx = rect.centerx
+        #self.centery = rect.centery
         # Figure out if rect has exceeded camera slack
         if self.centerx - rect.centerx > self.cameraSlack:
             self.left = rect.centerx + self.cameraSlack - self.width/2

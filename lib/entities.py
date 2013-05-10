@@ -7,7 +7,7 @@ import anim
 Kleft = K_LEFT
 Kright = K_RIGHT
 Kjump = K_SPACE
-Kcrouch = K_z
+Kcrouch = K_DOWN
 
 NORTH = 'north'
 SOUTH = 'south'
@@ -36,12 +36,17 @@ class Entity(object):
 
         self.cameraRect = copy.copy(self.rect)
         
-        try:
+        if type(image) is pygame.Surface:
             self.image = image
-        except pygame.error:
+        elif type(image) is str:
+            try:
+                spritesheet = pygame.image.load(image)
+            except pygame.error:
+                self.image = pygame.Surface((self.rect.width, self.rect.height))
+                self.image.fill(self.color)
+        elif image == None:
             self.image = pygame.Surface((self.rect.width, self.rect.height))
             self.image.fill(self.color)
-            self.hasSprite = False
         
         self.accelX = 0
         self.speedX = 0
@@ -279,8 +284,12 @@ class Player(Entity):
     crouchHeight = 70
     def __init__(self, level, rectTuple, image=None):
         super(Player, self).__init__(level, rectTuple, image)
-        self.running = anim.Animation("lib\\player.png", self.rect.width, 0.2)
-    
+        try:
+            self.runAnim = anim.Animation("lib\\player.png", self.rect.width, 0.05)
+            self.crouchAnim = anim.Animation("lib\\crouching.png", self.rect.width, 0.05)
+            self.hasAnim = True
+        except pygame.error:
+            self.hasAnim = False
     def update(self, keys, level):
         # Crouch the player if needed
         if keys[Kcrouch] and not self.crouching:
@@ -332,17 +341,32 @@ class Player(Entity):
         self.rect.top  += self.minYDistance
         self.cameraRect.move_ip(self.minXDistance, self.minYDistance)
         
-        # Update frames of player
-        if self.speedX > 0:
-            if self.running.reversed:
-                self.running.reverse()
-            self.running.update()
-            self.image = self.running.image
-        elif self.speedX < 0:
-            if not self.running.reversed:
-                self.running.reverse()
-            self.running.update()
-            self.image = self.running.image
-        elif self.speedX == 0:
-            self.image = self.running.frames[1]
-            self.running.reset()
+        # Update frames of player if possible
+        if self.hasAnim:
+            if self.speedX > 0:
+                if self.runAnim.reversed or self.crouchAnim.reversed:
+                    self.runAnim.reverse()
+                    self.crouchAnim.reverse()
+                self.runAnim.update()
+                self.image = self.runAnim.image
+            elif self.speedX < 0:
+                if not self.runAnim.reversed or not self.crouchAnim.reversed:
+                    self.runAnim.reverse()
+                    self.crouchAnim.reverse()
+                    
+            if not self.crouching:        
+                self.runAnim.update()
+                self.image = self.runAnim.image
+            elif self.crouching:
+                self.crouchAnim.update()
+                self.image = self.crouchAnim.image
+                
+            if self.speedY != 0 or self.jumping:
+                self.image = self.runAnim.frames[4]
+            elif self.speedX == 0 and self.speedY == 0:
+                if not self.crouching:
+                    self.image = self.runAnim.frames[0]
+                elif self.crouching:
+                    self.image = self.crouchAnim.frames[0]
+                self.runAnim.reset()
+                self.crouchAnim.reset()
