@@ -18,7 +18,7 @@ AXISY = 'y'
 
 class Entity(object):
     color = (255, 0, 0)
-    maxSpeed = 18
+    maxSpeed = 16
     accel_amt = 3
     airaccel_amt = 2
     deaccel_amt = 10
@@ -29,8 +29,8 @@ class Entity(object):
     maxFallSpeed = 30
     
     def __init__(self, level, rectTuple, image=None):
-        self.rect = pygame.Rect((rectTuple[0] * level.blockWidth) - level.blockWidth,
-                                (rectTuple[1] * level.blockHeight) - level.blockHeight,
+        self.rect = pygame.Rect((rectTuple[0] * level.blockWidth),
+                                (rectTuple[1] * level.blockHeight),
                                  rectTuple[2], rectTuple[3])
         self.normalHeight = self.rect.height
 
@@ -179,18 +179,18 @@ class Entity(object):
         linesToCheck = []
         if axis == AXISX:
             for y in range(level.levelHeight):
-                if rect.colliderect(pygame.Rect(0, 
-                                                y*level.blockHeight, 
-                                                level.rightEdge, 
-                                                level.blockHeight)):
+                if rect.colliderect((0, 
+                                     y*level.blockHeight, 
+                                     level.rightEdge, 
+                                     level.blockHeight)):
                     linesToCheck.append(y)
                     
         elif axis == AXISY:
             for x in range(level.levelWidth):
-                if rect.colliderect(pygame.Rect(x*level.blockWidth, 
-                                                0, 
-                                                level.blockWidth, 
-                                                level.bottomEdge)):
+                if rect.colliderect((x*level.blockWidth, 
+                                     0, 
+                                     level.blockWidth, 
+                                     level.bottomEdge)):
                     linesToCheck.append(x)
         
         return linesToCheck
@@ -282,22 +282,31 @@ class Entity(object):
 class Player(Entity):
     crouching = False
     crouchHeight = 70
+    crouchMaxSpeed = 10
+    
     def __init__(self, level, rectTuple, image=None):
         super(Player, self).__init__(level, rectTuple, image)
         try:
-            self.runAnim = anim.Animation("lib\\player.png", self.rect.width, 0.05)
-            self.crouchAnim = anim.Animation("lib\\crouching.png", self.rect.width, 0.05)
+            self.runAnim = anim.Animation("lib\\player.png", self.rect.width, 0.015)
+            self.crouchAnim = anim.Animation("lib\\crouching.png", self.rect.width, 0.07)
+            self.idle = anim.Animation("lib\\idle.png", self.rect.width, 0)
+            self.idleCrouching = anim.Animation("lib\\idle_crouching.png", self.rect.width, 0)
             self.hasAnim = True
         except pygame.error:
             self.hasAnim = False
+        self.defMaxSpeed = self.maxSpeed
+    
     def update(self, keys, level):
         # Crouch the player if needed
         if keys[Kcrouch] and not self.crouching:
             self.crouching = True
+            self.maxSpeed = self.crouchMaxSpeed
             self.rect.height = self.crouchHeight
             self.rect.bottom += self.normalHeight - self.crouchHeight
+            
         elif not keys[Kcrouch] and self.crouching:
             self.crouching = False
+            self.maxSpeed = self.defMaxSpeed
             self.rect.height = self.normalHeight
             self.rect.bottom -= self.normalHeight - self.crouchHeight
         
@@ -328,6 +337,8 @@ class Player(Entity):
         if abs(self.minXDistance) < abs(self.speedX):
             self.speedX = 0
         
+        self.rect.left += self.minXDistance
+        
         # For Y-axis
         try:
             self.minYDistance = self.get_shortest_distance(self.rect, self.speedY, AXISY, level)
@@ -335,11 +346,12 @@ class Player(Entity):
             self.minYDistance = self.speedY
         if abs(self.minYDistance) < abs(self.speedY):
             self.speedY = 0
-        
-        # Update player position
-        self.rect.left += self.minXDistance  
+            
         self.rect.top  += self.minYDistance
-        self.cameraRect.move_ip(self.minXDistance, self.minYDistance)
+        
+        # Update camera rect 
+        self.cameraRect.bottom = self.rect.bottom
+        self.cameraRect.left = self.rect.left
         
         # Update frames of player if possible
         if self.hasAnim:
@@ -347,12 +359,16 @@ class Player(Entity):
                 if self.runAnim.reversed or self.crouchAnim.reversed:
                     self.runAnim.reverse()
                     self.crouchAnim.reverse()
+                    self.idle.reverse()
+                    self.idleCrouching.reverse()
                 self.runAnim.update()
                 self.image = self.runAnim.image
             elif self.speedX < 0:
                 if not self.runAnim.reversed or not self.crouchAnim.reversed:
                     self.runAnim.reverse()
                     self.crouchAnim.reverse()
+                    self.idle.reverse()
+                    self.idleCrouching.reverse()
                     
             if not self.crouching:        
                 self.runAnim.update()
@@ -365,8 +381,8 @@ class Player(Entity):
                 self.image = self.runAnim.frames[4]
             elif self.speedX == 0 and self.speedY == 0:
                 if not self.crouching:
-                    self.image = self.runAnim.frames[0]
+                    self.image = self.idle.frames[0]
                 elif self.crouching:
-                    self.image = self.crouchAnim.frames[0]
+                    self.image = self.idleCrouching.frames[0]
                 self.runAnim.reset()
                 self.crouchAnim.reset()

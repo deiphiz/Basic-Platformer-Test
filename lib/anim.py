@@ -27,12 +27,13 @@ class Animation(object):
         self.reversed = False
             
     def update(self):
-        if time.time() - self.lastFrame >= self.frameDuration:
+        elapsed = time.time() - self.lastFrame
+        if elapsed >= self.frameDuration:
             self.lastFrame = time.time()
             self.currentFrame += 1
-            if self.currentFrame > len(self.frames)-1:
+            while self.currentFrame > len(self.frames)-1:
                 self.currentFrame = 0
-        self.image = self.frames[self.currentFrame]
+        self.image = self.frames[int(self.currentFrame)]
     
     def reverse(self):
         for index, frame in enumerate(self.frames):

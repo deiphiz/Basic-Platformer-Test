@@ -1,3 +1,5 @@
+import pygame
+
 class Level(object):
     blank = '.'
     block = '0'
@@ -14,3 +16,7 @@ class Level(object):
         self.topEdge = 0
         self.rightEdge = self.levelWidth * self.blockWidth
         self.bottomEdge = self.levelHeight * self.blockHeight
+        
+        
+        self.blockSurf = pygame.Surface((self.blockWidth, self.blockHeight))
+        self.blockSurf.fill((255,255,255))

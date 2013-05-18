@@ -1,7 +1,6 @@
 import pygame
 import time
 import random
-from level import *
 pygame.font.init()
 
 #------------  R    G    B  ----------------
@@ -14,13 +13,15 @@ BLUE      =  (  0,   0, 255)
 HOTPINK   =  (255, 110, 168)   
 LIGHTBLUE =  (128, 128, 255)
 
-BLOCK_COLOR = LIGHTBLUE
+BLOCK_COLOR = WHITE
 PLAYER_COLOR = HOTPINK
 BACKGROUND_COLOR = BLACK
-OSD_COLOR = WHITE
+OSD_COLOR = GREY
 
 FONTSIZE = 20
-MAINFONT = pygame.font.SysFont("Calibri", FONTSIZE)
+MAINFONT = pygame.font.SysFont("Courier New", FONTSIZE)
+#BACKGROUND = pygame.transform.scale(pygame.image.load("lib\\background.jpg"), (800, 600))
+
 
 def drawText(text, font, color, surface, x, y):
     textobj = font.render(text, 1, color)
@@ -35,6 +36,7 @@ def draw_OSD(surface, strings):
         pos += FONTSIZE
 
 def draw_level(surface, level, camera):
+    #surface.blit(BACKGROUND, (0, 0))
     surface.fill(BACKGROUND_COLOR)
 
     # Rendering involves a little conversion of level coordinates to surface coordinates
@@ -46,11 +48,14 @@ def draw_level(surface, level, camera):
                 if level.collisionLayer[y][x] == level.blank:
                     continue
                 if level.collisionLayer[y][x] == level.block:
-                    pygame.draw.rect(surface, BLOCK_COLOR, 
-                    ((x*level.blockWidth) - camera.left, 
-                     (y*level.blockHeight) - camera.top, 
-                     level.blockWidth, 
-                     level.blockHeight))
+                    surface.blit(level.blockSurf,
+                                 ((x*level.blockWidth) - camera.left, 
+                                 (y*level.blockHeight) - camera.top,))
+                    #pygame.draw.rect(surface, BLOCK_COLOR, 
+                    #((x*level.blockWidth) - camera.left, 
+                     #(y*level.blockHeight) - camera.top, 
+                     #level.blockWidth, 
+                     #level.blockHeight))
  
 # This function is needed to draw a rect within the camera 
 def draw_entities(surface, sprites, camera):

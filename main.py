@@ -20,20 +20,21 @@ from lib import (entities,
 class main():
     # Screen Constants
     FPS = 30
+    FPS_limit = True
     WINDOWWIDTH = 800
     WINDOWHEIGHT = 600
     FLAGS = HWSURFACE|DOUBLEBUF
-    showText = True
+    showText = False
     
     def play_game(self):
         # Set up screen
         self.screen = pygame.display.set_mode((self.WINDOWWIDTH, self.WINDOWHEIGHT), self.FLAGS)
-        pygame.display.set_caption('2D Platforming Test 3')
+        pygame.display.set_caption('2D Platforming Test')
         self.clock = pygame.time.Clock()
         
         # Set up objects
         self.currentLevel = level.Level("lib\\level_1.lvl")
-        self.player = entities.Player(self.currentLevel, (10, 8, 60, 90))
+        self.player = entities.Player(self.currentLevel, (10, 9, 60, 90))
         self.cameraObj = camera.Camera(self.player.rect, 
                                        self.WINDOWWIDTH, 
                                        self.WINDOWHEIGHT)
@@ -63,6 +64,11 @@ class main():
             if event.type == KEYUP:
                 if event.key == K_x:
                     self.showText = not self.showText
+                if event.key == K_z:
+                    if self.FPS > 0:
+                        self.FPS = 0
+                    else:
+                        self.FPS = 30
 
         keys = pygame.key.get_pressed()
         return keys
