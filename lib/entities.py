@@ -18,12 +18,13 @@ AXISY = 'y'
 
 class Entity(object):
     color = (255, 0, 0)
-    maxSpeed = 16
-    accel_amt = 3
-    airaccel_amt = 2
-    deaccel_amt = 10
     
-    fallAccel = 4
+    maxSpeed = 12
+    accel_amt = 1.5
+    airaccel_amt = 1
+    deaccel_amt = 5
+    
+    fallAccel = 3.75
     jumpMod = 2.5
     jumpAccel = 25
     maxFallSpeed = 30
@@ -35,6 +36,8 @@ class Entity(object):
         self.normalHeight = self.rect.height
 
         self.cameraRect = copy.copy(self.rect)
+
+        self.animation_speed = 0.030
         
         if type(image) is pygame.Surface:
             self.image = image
@@ -43,7 +46,7 @@ class Entity(object):
                 spritesheet = pygame.image.load(image)
             except pygame.error:
                 self.image = pygame.Surface((self.rect.width, self.rect.height))
-                self.image.fill(self.color)
+                self.image.fill(self.color) 
         elif image == None:
             self.image = pygame.Surface((self.rect.width, self.rect.height))
             self.image.fill(self.color)
@@ -261,6 +264,7 @@ class Entity(object):
         return False
         
     def check_on_block(self, rect, level):
+        # is there a better way than checking every block in the level?
         for x in range(level.levelWidth):
             for y in range(level.levelHeight):
                 if level.collisionLayer[y][x] == level.blank:
@@ -272,9 +276,39 @@ class Entity(object):
                                                 level.blockWidth, level.blockHeight)
                     tempCheckRect.bottom += 1
                     if tempLevelRect.colliderect(tempCheckRect):
-                        return True 
-                        
+                        return True
         return False
+
+    def check_head_collision(self, level):
+        '''
+        Checks the current player's original bounding rectangle to see if standing up
+        after crouching would cause a collision. If this returns True, the player should not be
+        allowed to stand up
+        '''
+        if not self.crouching:
+            return False
+        x, y = self.get_coords(level)
+        # we need to see check the three blocks above the players head
+        levelBlocks = (level.collisionLayer[y-1][x-1],
+                       level.collisionLayer[y-1][x],
+                       level.collisionLayer[y-1][x+1],)
+        
+        if all(block == level.blank for block in levelBlocks):
+            #all of the blocks above me are blank so there is no chance of collision
+            return False
+        else: # if level.collisionLayer[y-1][x] == level.block:
+            standingRect = copy.deepcopy(self.rect)
+            standingRect.top += (self.normalHeight - self.crouchHeight)
+            # make bounding rectangles for each of the three blocks above player
+            levelRects = [pygame.Rect(i*level.blockWidth,
+                                      y*level.blockHeight,
+                                      level.blockWidth,
+                                      level.blockHeight,)
+                              for i in range(x-1,x+2)]
+            
+            return any(levelBlocks[a] == level.block and
+                       levelRects[a].colliderect(standingRect)
+                       for a in range(len(levelBlocks)))
         
     def get_coords(self, level):
         return self.convert_pixel_to_level(self.rect.centerx, self.rect.centery, level)
@@ -282,12 +316,12 @@ class Entity(object):
 class Player(Entity):
     crouching = False
     crouchHeight = 70
-    crouchMaxSpeed = 10
+    crouchMaxSpeed = 6
     
     def __init__(self, level, rectTuple, image=None):
         super(Player, self).__init__(level, rectTuple, image)
         try:
-            self.runAnim = anim.Animation("lib\\player.png", self.rect.width, 0.015)
+            self.runAnim = anim.Animation("lib\\player.png", self.rect.width, self.animation_speed)
             self.crouchAnim = anim.Animation("lib\\crouching.png", self.rect.width, 0.07)
             self.idle = anim.Animation("lib\\idle.png", self.rect.width, 0)
             self.idleCrouching = anim.Animation("lib\\idle_crouching.png", self.rect.width, 0)
@@ -297,18 +331,23 @@ class Player(Entity):
         self.defMaxSpeed = self.maxSpeed
     
     def update(self, keys, level):
+        # disable midair crouching by only allowing crouching while on the ground
+        # similar to how the mario series handles this
+        self.onBlock = self.check_on_block(self.rect, level)
         # Crouch the player if needed
-        if keys[Kcrouch] and not self.crouching:
+        if keys[Kcrouch] and not self.crouching and self.onBlock:
             self.crouching = True
             self.maxSpeed = self.crouchMaxSpeed
             self.rect.height = self.crouchHeight
             self.rect.bottom += self.normalHeight - self.crouchHeight
             
-        elif not keys[Kcrouch] and self.crouching:
-            self.crouching = False
-            self.maxSpeed = self.defMaxSpeed
-            self.rect.height = self.normalHeight
-            self.rect.bottom -= self.normalHeight - self.crouchHeight
+        elif not keys[Kcrouch] and self.crouching and self.onBlock:
+            # check to see if you can uncrouch here
+            if not self.check_head_collision(level):
+                self.crouching = False
+                self.maxSpeed = self.defMaxSpeed
+                self.rect.height = self.normalHeight
+                self.rect.bottom -= self.normalHeight - self.crouchHeight
         
         # Update the player's image to the new rect size
         self.image = pygame.Surface((self.rect.width, self.rect.height))
@@ -320,7 +359,6 @@ class Player(Entity):
         
         # Calculate movement on Y-axis
         self.jumping = keys[Kjump]
-        self.onBlock = self.check_on_block(self.rect, level)
         if self.jumping:
             self.speedY = self.jump(self.speedY, self.onBlock)
             if self.onBlock:
