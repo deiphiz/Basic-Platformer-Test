@@ -19,7 +19,7 @@ from lib import (entities,
  
 class main():
     # Screen Constants
-    FPS = 30
+    FPS = 60
     FPS_limit = True
     WINDOWWIDTH = 800
     WINDOWHEIGHT = 600
@@ -35,6 +35,16 @@ class main():
         # Set up objects
         self.currentLevel = level.Level("lib\\level_1.lvl")
         self.player = entities.Player(self.currentLevel, (10, 9, 60, 90))
+        
+        # original speed settings for 30 FPS
+        if self.FPS == 30:
+            self.player.maxSpeed = 16
+            self.player.accel_amt = 3
+            self.player.airaccel_amt = 2
+            self.player.deaccel_amt = 10
+            self.player.fallAccel = 4
+            self.animation_speed = 0.015
+            
         self.cameraObj = camera.Camera(self.player.rect, 
                                        self.WINDOWWIDTH, 
                                        self.WINDOWHEIGHT)
@@ -64,11 +74,12 @@ class main():
             if event.type == KEYUP:
                 if event.key == K_x:
                     self.showText = not self.showText
+                # repurposed the 'z' key to frame limit to 30 fps
                 if event.key == K_z:
-                    if self.FPS > 0:
-                        self.FPS = 0
-                    else:
+                    if self.FPS > 30:
                         self.FPS = 30
+                    else:
+                        self.FPS = 60
 
         keys = pygame.key.get_pressed()
         return keys
